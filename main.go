@@ -35,12 +35,13 @@ func main() {
 
 	router := mux.NewRouter()
 
-	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization", "Origin", "Accept"})
 	origins := handlers.AllowedOrigins([]string{"*"})
-	methods := handlers.AllowedMethods([]string{"GET", "POST"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 	router.Use(handlers.CORS(headers, origins, methods))
+	log.Println("Applied CORS")
 
-	router.HandleFunc("/todos", handleTodos).Methods("GET", "POST")
+	router.HandleFunc("/todos", handleTodos).Methods("GET", "POST", "OPTIONS")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
@@ -57,6 +58,7 @@ func handleTodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTodos(w http.ResponseWriter) {
+
 	// retrieve all todos
 	var todos []Todo
 	db.Find(&todos)
@@ -67,6 +69,7 @@ func getTodos(w http.ResponseWriter) {
 }
 
 func createTodo(w http.ResponseWriter, r *http.Request) {
+
 	var todo Todo
 	err := json.NewDecoder(r.Body).Decode(&todo)
 	if err != nil {
