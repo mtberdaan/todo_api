@@ -16,6 +16,7 @@ import (
 type Todo struct {
 	gorm.Model
 	Title string `json:"title"`
+	Done  bool   `json:"done"`
 }
 
 var db *gorm.DB
