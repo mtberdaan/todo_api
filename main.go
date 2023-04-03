@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
@@ -33,6 +34,12 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+
+	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST"})
+	router.Use(handlers.CORS(headers, origins, methods))
+
 	router.HandleFunc("/todos", handleTodos).Methods("GET", "POST")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
