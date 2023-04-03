@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -26,12 +27,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Database Connected")
 
 	// run database migrations
 	err = db.AutoMigrate(&Todo{})
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Database Migrated")
 
 	router := mux.NewRouter()
 
@@ -41,9 +44,21 @@ func main() {
 	router.Use(handlers.CORS(headers, origins, methods))
 	log.Println("Applied CORS")
 
+	router.Use(logRequest)
 	router.HandleFunc("/todos", handleTodos).Methods("GET", "POST", "OPTIONS")
+	log.Println("Applied Handlers")
+	log.Println("Ready to Serve")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func logRequest(next http.Handler) http.Handler {
+
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func handleTodos(w http.ResponseWriter, r *http.Request) {
